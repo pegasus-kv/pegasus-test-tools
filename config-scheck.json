@@ -1,0 +1,16 @@
+{
+  "client": {
+    "meta_servers": [
+      "127.0.0.1:34601",
+      "127.0.0.1:34602",
+      "127.0.0.1:34603"
+    ]
+  },
+  "schema": {
+    "hash_key_prefix": "pegasus_test",
+    "sort_key_prefix": "pegasus_test",
+    "sort_key_batch": 10000,
+    "value_size": 100,
+    "app_name": "temp"
+  }
+}
