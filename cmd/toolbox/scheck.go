@@ -1,4 +1,4 @@
-package toolbox
+package main
 
 import (
 	"github.com/pegasus-kv/pegasus-test-tools/tools/scheck"

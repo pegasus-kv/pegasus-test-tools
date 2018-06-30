@@ -12,8 +12,8 @@ import (
 )
 
 type SchemaConfig struct {
-	HashKeyPrefix []byte `json:"hash_key_prefix"`
-	SortKeyPrefix []byte `json:"sort_key_prefix"`
+	HashKeyPrefix string `json:"hash_key_prefix"`
+	SortKeyPrefix string `json:"sort_key_prefix"`
 	SortKeyBatch  int    `json:"sort_key_batch"`
 	ValueSize     int    `json:"value_size"`
 	AppName       string `json:"app_name"`
@@ -38,13 +38,13 @@ func NewVerifier(clientCfg pegasus.Config, schemaCfg *SchemaConfig, rootCtx cont
 
 	var err error
 	ctx, _ := context.WithTimeout(rootCtx, v.opTimeout)
-	v.tb, err = v.c.OpenTable(ctx, v.schema.AppName)
+
+	v.tb, err = v.c.OpenTable(ctx, schemaCfg.AppName)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	v.schema = schemaCfg
-
 	return v
 }
 
@@ -93,8 +93,7 @@ func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
 }
 
 func (v *Verifier) generateKeyRange(hid int64) (hashKey []byte, sortKeys [][]byte) {
-	hidBuf := []byte(fmt.Sprintf("%v", hid))
-	hashKey = append(v.schema.HashKeyPrefix, hidBuf...)
+	hashKey = []byte(fmt.Sprintf("%s_%v", v.schema.HashKeyPrefix, hid))
 
 	for sid := 0; sid < v.schema.SortKeyBatch; sid++ {
 		var sidWithLeadingZero bytes.Buffer
@@ -103,7 +102,7 @@ func (v *Verifier) generateKeyRange(hid int64) (hashKey []byte, sortKeys [][]byt
 			sidWithLeadingZero.WriteByte('0')
 		}
 		sidWithLeadingZero.Write(sidBuf)
-		sortKey := append(v.schema.SortKeyPrefix, sidWithLeadingZero.Bytes()...)
+		sortKey := append([]byte(v.schema.SortKeyPrefix), sidWithLeadingZero.Bytes()...)
 
 		sortKeys = append(sortKeys, sortKey)
 	}
