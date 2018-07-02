@@ -10,6 +10,7 @@ import (
 
 	"github.com/XiaoMi/pegasus-go-client/pegasus"
 	"github.com/pegasus-kv/pegasus-test-tools/tools"
+	"sync/atomic"
 )
 
 type Config struct {
@@ -32,17 +33,29 @@ func Run(rootCtx context.Context) {
 	v1 := tools.NewVerifier(cfg.ClientCfg, &cfg.SchemaCfg, rootCtx)
 	v2 := tools.NewVerifier(cfg.RemoteCfg, &cfg.SchemaCfg, rootCtx)
 
-	hid1 := int64(0)
+	hid := int64(0)
+
+	go func() {
+		for {
+			select {
+			case <-time.Tick(time.Second * 10):
+				num := atomic.LoadInt64(&hid) * int64(cfg.SchemaCfg.SortKeyBatch)
+				log.Printf("verified %d records in total", num)
+			case <-rootCtx.Done():
+				return
+			}
+		}
+	}()
 
 	for {
-		v1.WriteBatchOrDie(hid1)
-		v1.ReadBatchOrDie(hid1)
+		v1.WriteBatchOrDie(hid)
+		v1.ReadBatchOrDie(hid)
 
 		time.Sleep(time.Second * 30)
 
-		v2.ReadBatchOrDie(hid1)
+		v2.ReadBatchOrDie(hid)
 
-		hid1++
+		atomic.AddInt64(&hid, 1)
 
 		select {
 		case <-rootCtx.Done():

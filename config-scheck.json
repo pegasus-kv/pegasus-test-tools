@@ -12,5 +12,9 @@
     "sort_key_batch": 1000,
     "value_size": 100,
     "app_name": "temp"
+  },
+  "kill": {
+    "run_script_path": "",
+    "total_replica_count": 5
   }
 }
