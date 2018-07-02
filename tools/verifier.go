@@ -50,18 +50,25 @@ func NewVerifier(clientCfg pegasus.Config, schemaCfg *SchemaConfig, rootCtx cont
 
 func (v *Verifier) setOrDie(hashKey []byte, sortKey []byte, value []byte) {
 	var err error
-	for tries := 0; tries < 10; tries++ {
-		ctx, _ := context.WithTimeout(context.Background(), v.opTimeout)
-		err = v.tb.Set(ctx, hashKey, sortKey, value)
-		if err == nil {
-			return
+	for tries := 0; tries < 5; tries++ {
+		ctx, _ := context.WithTimeout(v.rootCtx, v.opTimeout)
+		if err = v.tb.Set(ctx, hashKey, sortKey, value); err != nil {
+			log.Println(err)
+			time.Sleep(1 * time.Second)
+
+			// check if cancelled
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+
+			// retry
+			continue
 		}
 
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
+		// success
+		return
 	}
 
 	log.Fatalln(err)
@@ -70,22 +77,31 @@ func (v *Verifier) setOrDie(hashKey []byte, sortKey []byte, value []byte) {
 // TODO(wutao1): use scan instead.
 func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
 	var err error
-	for tries := 0; tries < 10; tries++ {
-		ctx, _ := context.WithTimeout(context.Background(), v.opTimeout)
-		value, err = v.tb.Get(ctx, hashKey, sortKey)
-		if err == nil {
-			return
-		}
-		if value == nil {
-			log.Fatalf("can't find hashkey: %s, sortkey: %s", string(hashKey), string(sortKey))
-			return // unreachable
+	for tries := 0; tries < 5; tries++ {
+		ctx, _ := context.WithTimeout(v.rootCtx, v.opTimeout)
+		if value, err = v.tb.Get(ctx, hashKey, sortKey); err != nil {
+			log.Println(err)
+			time.Sleep(1 * time.Second)
+
+			// check if cancelled
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+
+			// retry
+			continue
 		}
 
-		select {
-		case <-ctx.Done():
-			return
-		default:
+		// pegasus promises read-after-write consistency
+		if value == nil {
+			log.Fatalf("can't find record: [hashkey: %s, sortkey: %s]", string(hashKey), string(sortKey))
+			// unreachable
 		}
+
+		// success
+		return
 	}
 
 	log.Fatalln(err)
