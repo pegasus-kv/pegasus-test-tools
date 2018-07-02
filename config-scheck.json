@@ -9,7 +9,7 @@
   "schema": {
     "hash_key_prefix": "pegasus_test",
     "sort_key_prefix": "pegasus_test",
-    "sort_key_batch": 10000,
+    "sort_key_batch": 1000,
     "value_size": 100,
     "app_name": "temp"
   }

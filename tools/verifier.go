@@ -50,7 +50,7 @@ func NewVerifier(clientCfg pegasus.Config, schemaCfg *SchemaConfig, rootCtx cont
 
 func (v *Verifier) setOrDie(hashKey []byte, sortKey []byte, value []byte) {
 	var err error
-	for tries := 0; tries < 5; tries++ {
+	for tries := 0; tries < 30; tries++ {
 		ctx, _ := context.WithTimeout(v.rootCtx, v.opTimeout)
 		if err = v.tb.Set(ctx, hashKey, sortKey, value); err != nil {
 			log.Printf("%s [hashkey: %s, sortkey: %s]", err, hashKey, sortKey)
@@ -58,7 +58,7 @@ func (v *Verifier) setOrDie(hashKey []byte, sortKey []byte, value []byte) {
 
 			// check if cancelled
 			select {
-			case <-ctx.Done():
+			case <-v.rootCtx.Done():
 				return
 			default:
 			}
@@ -77,7 +77,7 @@ func (v *Verifier) setOrDie(hashKey []byte, sortKey []byte, value []byte) {
 // TODO(wutao1): use scan instead.
 func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
 	var err error
-	for tries := 0; tries < 5; tries++ {
+	for tries := 0; tries < 30; tries++ {
 		ctx, _ := context.WithTimeout(v.rootCtx, v.opTimeout)
 		if value, err = v.tb.Get(ctx, hashKey, sortKey); err != nil {
 			log.Printf("%s [hashkey: %s, sortkey: %s]", err, hashKey, sortKey)
@@ -85,7 +85,7 @@ func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
 
 			// check if cancelled
 			select {
-			case <-ctx.Done():
+			case <-v.rootCtx.Done():
 				return
 			default:
 			}

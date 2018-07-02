@@ -1,5 +1,5 @@
 
-# Pegasus test tools
+# Pegasus Test Tools
 
 This project includes a set of tools that are useful for availability tests of pegasus.
 
