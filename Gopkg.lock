@@ -14,7 +14,7 @@
     "rpc",
     "session"
   ]
-  revision = "2797a37b61e966356ca07f0b20e66ae6c149da47"
+  revision = "59b240ccfba480bf83723138b708ec206dfe519d"
 
 [[projects]]
   name = "github.com/apache/thrift"
