@@ -53,7 +53,7 @@ func (v *Verifier) setOrDie(hashKey []byte, sortKey []byte, value []byte) {
 	for tries := 0; tries < 5; tries++ {
 		ctx, _ := context.WithTimeout(v.rootCtx, v.opTimeout)
 		if err = v.tb.Set(ctx, hashKey, sortKey, value); err != nil {
-			log.Println(err)
+			log.Printf("%s [hashkey: %s, sortkey: %s]", err, hashKey, sortKey)
 			time.Sleep(1 * time.Second)
 
 			// check if cancelled
@@ -80,7 +80,7 @@ func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
 	for tries := 0; tries < 5; tries++ {
 		ctx, _ := context.WithTimeout(v.rootCtx, v.opTimeout)
 		if value, err = v.tb.Get(ctx, hashKey, sortKey); err != nil {
-			log.Println(err)
+			log.Printf("%s [hashkey: %s, sortkey: %s]", err, hashKey, sortKey)
 			time.Sleep(1 * time.Second)
 
 			// check if cancelled
@@ -109,11 +109,11 @@ func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
 }
 
 func (v *Verifier) generateKeyRange(hid int64) (hashKey []byte, sortKeys [][]byte) {
-	hashKey = []byte(fmt.Sprintf("%s_%v", v.schema.HashKeyPrefix, hid))
+	hashKey = []byte(fmt.Sprintf("%s%d", v.schema.HashKeyPrefix, hid))
 
 	for sid := 0; sid < v.schema.SortKeyBatch; sid++ {
 		var sidWithLeadingZero bytes.Buffer
-		sidBuf := []byte(fmt.Sprintf("%v", sid))
+		sidBuf := []byte(fmt.Sprintf("%d", sid))
 		for i := 0; i < 20-len(sidBuf); i++ {
 			sidWithLeadingZero.WriteByte('0')
 		}
@@ -127,6 +127,7 @@ func (v *Verifier) generateKeyRange(hid int64) (hashKey []byte, sortKeys [][]byt
 }
 
 // TODO(wutao1): write using multiple goroutines
+// Not thread-safe.
 func (v *Verifier) WriteBatchOrDie(hid int64) {
 	value := &bytes.Buffer{}
 	for vid := 0; vid < v.schema.ValueSize; vid++ {
@@ -145,6 +146,7 @@ func (v *Verifier) WriteBatchOrDie(hid int64) {
 	}
 }
 
+// Not thread-safe.
 func (v *Verifier) ReadBatchOrDie(hid int64) {
 	hashKey, sortKeys := v.generateKeyRange(hid)
 	for _, sortKey := range sortKeys {
