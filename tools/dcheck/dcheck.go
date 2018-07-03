@@ -36,6 +36,7 @@ func Run(rootCtx context.Context, withKillTest bool) {
 
 	v1 := tools.NewVerifier(cfg.ClientCfg, &cfg.SchemaCfg, rootCtx)
 	v2 := tools.NewVerifier(cfg.RemoteCfg, &cfg.SchemaCfg, rootCtx)
+	verifiedHid := int64(0)
 
 	hid := int64(0)
 
@@ -47,12 +48,18 @@ func Run(rootCtx context.Context, withKillTest bool) {
 	go func() {
 		for {
 			select {
-			case <-time.Tick(time.Second * 10):
+			case <-time.Tick(time.Second * 50):
 				num := atomic.LoadInt64(&hid) * int64(cfg.SchemaCfg.SortKeyBatch)
 				log.Printf("verified %d records in total", num)
 			case <-rootCtx.Done():
 				return
 			}
+		}
+	}()
+
+	go func() {
+		for {
+			v1.FullScan(atomic.LoadInt64(&verifiedHid))
 		}
 	}()
 
@@ -63,6 +70,9 @@ func Run(rootCtx context.Context, withKillTest bool) {
 		time.Sleep(time.Second * 30)
 
 		v2.ReadBatchOrDie(hid)
+
+		// mark verified point
+		atomic.StoreInt64(&verifiedHid, hid)
 
 		atomic.AddInt64(&hid, 1)
 

@@ -34,7 +34,9 @@ func Run(rootCtx context.Context, withKillTest bool) {
 	json.Unmarshal(rawCfg, cfg)
 
 	v := tools.NewVerifier(cfg.ClientCfg, &cfg.SchemaCfg, rootCtx)
+
 	hid := int64(0)
+	verifiedHid := int64(0)
 
 	if withKillTest {
 		kt := tools.NewServerKillTest(&cfg.KillCfg)
@@ -53,9 +55,19 @@ func Run(rootCtx context.Context, withKillTest bool) {
 		}
 	}()
 
+	// periodically verify the old data to ensure they are not lost.
+	go func() {
+		for {
+			v.FullScan(atomic.LoadInt64(&verifiedHid))
+		}
+	}()
+
 	for {
 		v.WriteBatchOrDie(hid)
 		v.ReadBatchOrDie(hid)
+
+		// mark verified point
+		atomic.StoreInt64(&verifiedHid, hid)
 
 		atomic.AddInt64(&hid, 1)
 

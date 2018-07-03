@@ -74,7 +74,6 @@ func (v *Verifier) setOrDie(hashKey []byte, sortKey []byte, value []byte) {
 	log.Fatalln(err)
 }
 
-// TODO(wutao1): use scan instead.
 func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
 	var err error
 	for tries := 0; tries < 30; tries++ {
@@ -157,5 +156,31 @@ func (v *Verifier) ReadBatchOrDie(hid int64) {
 			return
 		default:
 		}
+	}
+}
+
+// Full scan the entire table to ensure data with hashKeys ranging in [0, hid]
+// are not lost.
+// TODO(wutao1): use scan instead.
+func (v *Verifier) FullScan(hid int64) {
+	for i := int64(0); i <= hid; i++ {
+		v.ReadBatchOrDie(hid)
+
+		select {
+		case <-v.rootCtx.Done():
+			return
+		default:
+		}
+	}
+
+	log.Printf("full scan complete [hid: %d]", hid)
+
+	v.waitTil(60 * time.Second)
+}
+
+func (v *Verifier) waitTil(duration time.Duration) {
+	select {
+	case <-v.rootCtx.Done():
+	case <-time.After(time.Second * 60):
 	}
 }
