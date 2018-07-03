@@ -10,7 +10,7 @@ var (
 )
 
 func runSCheckCommand(cmd *cobra.Command, args []string) {
-	scheck.Run(globalContext)
+	scheck.Run(globalContext, withKillTest)
 }
 
 func newSCheckCommand() *cobra.Command {

@@ -14,7 +14,7 @@
     "app_name": "temp"
   },
   "kill": {
-    "run_script_path": "",
+    "run_script_dir": "/home/mi/git/pegasus",
     "total_replica_count": 5
   }
 }

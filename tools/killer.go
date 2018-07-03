@@ -1,15 +1,23 @@
 package tools
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 )
 
+const (
+	iTypeReplica = "r"
+	iTypeMeta    = "m"
+)
+
 type KillTestConfig struct {
-	RunScriptPath   string `json:"run_script_path"`
+	RunScriptDir    string `json:"run_script_dir"`
 	TotalReplicaCnt int    `json:"total_replica_count"`
 }
 
@@ -22,22 +30,53 @@ type ServerKillTest struct {
 func NewServerKillTest(cfg *KillTestConfig) *ServerKillTest {
 	s := &ServerKillTest{}
 	s.cfg = cfg
-	s.oc = &oneboxController{runScriptPath: cfg.RunScriptPath}
+
+	path, err := filepath.Abs(cfg.RunScriptDir)
+	if err != nil {
+		log.Fatalf("bad run script path: %s", path)
+	}
+	if _, err := os.Stat(path + "/run.sh"); os.IsNotExist(err) {
+		log.Fatalf("run script path doesn't exist: %s", path+"/run.sh")
+	}
+	s.oc = &oneboxController{runScriptPath: path}
+
 	return s
 }
 
-func (s *ServerKillTest) Round() {
-	id := rand.Intn(s.cfg.TotalReplicaCnt)
-	log.Printf("killing replica %d", id)
+func (s *ServerKillTest) Run(ctx context.Context) {
+	roundId := 0
+	for {
+		roundId++
+		s.round(roundId)
 
-	if err := s.oc.killInstance("replica", id); err != nil {
+		select {
+		case <-ctx.Done():
+			log.Printf("stopping killer")
+			return
+		default:
+		}
+	}
+}
+
+func (s *ServerKillTest) round(roundId int) {
+	// sleep for a random time before kill
+	sleepTime := rand.Intn(60) + 1
+	log.Printf("sleep %ds before kill", sleepTime)
+	time.Sleep(time.Second * time.Duration(sleepTime))
+
+	id := rand.Intn(s.cfg.TotalReplicaCnt) + 1
+	log.Printf("killing replica %d at round %d", id, roundId)
+	if err := s.oc.killInstance(iTypeReplica, id); err != nil {
 		log.Fatalf("failed to kill replica %d: %s", id, err)
 	}
 
 	// sleep for a random time before restart
-	time.Sleep(time.Second*time.Duration(rand.Intn(60)) + 1)
+	sleepTime = rand.Intn(60) + 1
+	log.Printf("sleep %ds before restart", sleepTime)
+	time.Sleep(time.Second * time.Duration(sleepTime))
 
-	if err := s.oc.startInstance("replica", id); err != nil {
+	log.Printf("restarting replica %d at round %d", id, roundId)
+	if err := s.oc.startInstance(iTypeReplica, id); err != nil {
 		log.Fatalf("failed to recover replica %d: %s", id, err)
 	}
 }
@@ -56,8 +95,12 @@ func (o *oneboxController) startInstance(itype string, idx int) error {
 }
 
 func (o *oneboxController) control(itype string, idx int, op string) error {
-	cmdStr := fmt.Sprintf("cd %s; bash run.sh %s_onebox_instance --%s %d",
+	cmdStr := fmt.Sprintf("cd %s; bash run.sh %s_onebox_instance -%s %d",
 		o.runScriptPath, op, itype, idx)
+	log.Printf("execute shell command \"%s\"", cmdStr)
 	cmd := exec.Command("bash", "-c", cmdStr)
-	return cmd.Run()
+
+	output, err := cmd.Output()
+	log.Printf(string(output))
+	return err
 }

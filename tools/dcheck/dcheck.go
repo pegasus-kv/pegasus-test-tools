@@ -6,11 +6,11 @@ import (
 	"io/ioutil"
 	"log"
 	"path/filepath"
+	"sync/atomic"
 	"time"
 
 	"github.com/XiaoMi/pegasus-go-client/pegasus"
 	"github.com/pegasus-kv/pegasus-test-tools/tools"
-	"sync/atomic"
 )
 
 type Config struct {

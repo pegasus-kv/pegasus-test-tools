@@ -5,20 +5,24 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"path/filepath"
-	"time"
 	"sync/atomic"
+	"time"
 
 	"github.com/XiaoMi/pegasus-go-client/pegasus"
 	"github.com/pegasus-kv/pegasus-test-tools/tools"
 )
 
 type Config struct {
-	ClientCfg pegasus.Config     `json:"client"`
-	SchemaCfg tools.SchemaConfig `json:"schema"`
+	ClientCfg pegasus.Config       `json:"client"`
+	SchemaCfg tools.SchemaConfig   `json:"schema"`
+	KillCfg   tools.KillTestConfig `json:"kill"`
 }
 
-func Run(rootCtx context.Context) {
+func Run(rootCtx context.Context, withKillTest bool) {
+	rand.Seed(time.Now().UnixNano())
+
 	cfgPath, _ := filepath.Abs("config-scheck.json")
 	rawCfg, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
@@ -31,6 +35,11 @@ func Run(rootCtx context.Context) {
 
 	v := tools.NewVerifier(cfg.ClientCfg, &cfg.SchemaCfg, rootCtx)
 	hid := int64(0)
+
+	if withKillTest {
+		kt := tools.NewServerKillTest(&cfg.KillCfg)
+		go kt.Run(rootCtx)
+	}
 
 	go func() {
 		for {
