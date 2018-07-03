@@ -174,13 +174,11 @@ func (v *Verifier) FullScan(hid int64) {
 	}
 
 	log.Printf("full scan complete [hid: %d]", hid)
-
-	v.waitTil(60 * time.Second)
 }
 
-func (v *Verifier) waitTil(duration time.Duration) {
+func WaitTil(ctx context.Context, duration time.Duration) {
 	select {
-	case <-v.rootCtx.Done():
-	case <-time.After(time.Second * 60):
+	case <-ctx.Done():
+	case <-time.After(duration):
 	}
 }

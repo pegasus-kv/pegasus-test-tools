@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"os/signal"
 	"syscall"
@@ -57,6 +58,8 @@ func main() {
 	)
 
 	cobra.EnablePrefixMatching = true
+
+	rand.Seed(time.Now().UnixNano())
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(rootCmd.UsageString())

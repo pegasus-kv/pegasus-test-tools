@@ -2,11 +2,7 @@ package scheck
 
 import (
 	"context"
-	"encoding/json"
-	"io/ioutil"
 	"log"
-	"math/rand"
-	"path/filepath"
 	"sync/atomic"
 	"time"
 
@@ -21,17 +17,8 @@ type Config struct {
 }
 
 func Run(rootCtx context.Context, withKillTest bool) {
-	rand.Seed(time.Now().UnixNano())
-
-	cfgPath, _ := filepath.Abs("config-scheck.json")
-	rawCfg, err := ioutil.ReadFile(cfgPath)
-	if err != nil {
-		log.Fatalln(err)
-		return
-	}
-
 	cfg := &Config{}
-	json.Unmarshal(rawCfg, cfg)
+	tools.LoadAndUnmarshalConfig("config-scheck.json", cfg)
 
 	v := tools.NewVerifier(cfg.ClientCfg, &cfg.SchemaCfg, rootCtx)
 
@@ -59,6 +46,7 @@ func Run(rootCtx context.Context, withKillTest bool) {
 	go func() {
 		for {
 			v.FullScan(atomic.LoadInt64(&verifiedHid))
+			tools.WaitTil(rootCtx, time.Second*60)
 		}
 	}()
 
