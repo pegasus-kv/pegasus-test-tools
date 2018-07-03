@@ -2,11 +2,7 @@ package dcheck
 
 import (
 	"context"
-	"encoding/json"
-	"io/ioutil"
 	"log"
-	"math/rand"
-	"path/filepath"
 	"sync/atomic"
 	"time"
 
@@ -22,28 +18,22 @@ type Config struct {
 }
 
 func Run(rootCtx context.Context, withKillTest bool) {
-	rand.Seed(time.Now().UnixNano())
-
-	cfgPath, _ := filepath.Abs("config-dcheck.json")
-	rawCfg, err := ioutil.ReadFile(cfgPath)
-	if err != nil {
-		log.Fatalln(err)
-		return
-	}
-
 	cfg := &Config{}
-	json.Unmarshal(rawCfg, cfg)
+	tools.LoadAndUnmarshalConfig("config-dcheck.json", cfg)
 
 	v1 := tools.NewVerifier(cfg.ClientCfg, &cfg.SchemaCfg, rootCtx)
 	v2 := tools.NewVerifier(cfg.RemoteCfg, &cfg.SchemaCfg, rootCtx)
-	verifiedHid := int64(0)
-
-	hid := int64(0)
 
 	if withKillTest {
 		kt := tools.NewServerKillTest(&cfg.KillCfg)
 		go kt.Run(rootCtx)
 	}
+
+	hid := int64(0)
+	verifiedHid := int64(0)
+	duplicatedHid := int64(0) // [0, duplicated] are assumed to be duplicated.
+	pendingHid := int64(0)
+	lastVerifiedTs := time.Now()
 
 	go func() {
 		for {
@@ -60,6 +50,14 @@ func Run(rootCtx context.Context, withKillTest bool) {
 	go func() {
 		for {
 			v1.FullScan(atomic.LoadInt64(&verifiedHid))
+			tools.WaitTil(rootCtx, time.Second*60)
+		}
+	}()
+
+	go func() {
+		for {
+			v2.FullScan(atomic.LoadInt64(&duplicatedHid))
+			tools.WaitTil(rootCtx, time.Second*60)
 		}
 	}()
 
@@ -67,9 +65,14 @@ func Run(rootCtx context.Context, withKillTest bool) {
 		v1.WriteBatchOrDie(hid)
 		v1.ReadBatchOrDie(hid)
 
-		time.Sleep(time.Second * 30)
-
-		v2.ReadBatchOrDie(hid)
+		if time.Now().Sub(lastVerifiedTs) > time.Second*60 {
+			if pendingHid > 0 {
+				// written data must arrive at remote cluster within 60s
+				atomic.StoreInt64(&duplicatedHid, pendingHid)
+			}
+			atomic.StoreInt64(&pendingHid, hid)
+			lastVerifiedTs = time.Now()
+		}
 
 		// mark verified point
 		atomic.StoreInt64(&verifiedHid, hid)
