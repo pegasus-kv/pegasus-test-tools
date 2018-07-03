@@ -9,6 +9,8 @@ Single cluster correctness checker.
 
 **Usage:**
 
+First ensure onebox (5-replica is recommended) is running on your computer.
+
 ```
 make
 ./bin/toolbox scheck
@@ -16,7 +18,7 @@ make
 
 Configuration config-scheck.json must be placed at the same directory as toolbox:
 
-```json
+```
 {
   "client": {
     "meta_servers": [ // address of pegasus cluster

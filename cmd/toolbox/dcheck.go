@@ -6,13 +6,15 @@ import (
 )
 
 func runDCheckCommand(cmd *cobra.Command, args []string) {
-	dcheck.Run(globalContext)
+	dcheck.Run(globalContext, withKillTest)
 }
 
 func newDCheckCommand() *cobra.Command {
-	return &cobra.Command{
+	m := &cobra.Command{
 		Use:   "dcheck",
 		Short: "duplication correctness checker",
 		Run:   runDCheckCommand,
 	}
+	m.Flags().BoolVarP(&withKillTest, "kill", "k", false, "will randomly kill servers")
+	return m
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"path/filepath"
 	"sync/atomic"
 	"time"
@@ -14,12 +15,15 @@ import (
 )
 
 type Config struct {
-	ClientCfg pegasus.Config     `json:"client"`
-	RemoteCfg pegasus.Config     `json:"remote_client"`
-	SchemaCfg tools.SchemaConfig `json:"schema"`
+	ClientCfg pegasus.Config       `json:"client"`
+	RemoteCfg pegasus.Config       `json:"remote_client"`
+	SchemaCfg tools.SchemaConfig   `json:"schema"`
+	KillCfg   tools.KillTestConfig `json:"kill"`
 }
 
-func Run(rootCtx context.Context) {
+func Run(rootCtx context.Context, withKillTest bool) {
+	rand.Seed(time.Now().UnixNano())
+
 	cfgPath, _ := filepath.Abs("config-dcheck.json")
 	rawCfg, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
@@ -34,6 +38,11 @@ func Run(rootCtx context.Context) {
 	v2 := tools.NewVerifier(cfg.RemoteCfg, &cfg.SchemaCfg, rootCtx)
 
 	hid := int64(0)
+
+	if withKillTest {
+		kt := tools.NewServerKillTest(&cfg.KillCfg)
+		go kt.Run(rootCtx)
+	}
 
 	go func() {
 		for {

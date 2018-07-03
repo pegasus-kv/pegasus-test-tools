@@ -19,5 +19,9 @@
     "sort_key_batch": 1000,
     "value_size": 100,
     "app_name": "temp"
+  },
+  "kill": {
+    "run_script_dir": "/home/mi/git/pegasus",
+    "total_replica_count": 5
   }
 }
