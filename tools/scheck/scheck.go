@@ -2,7 +2,6 @@ package scheck
 
 import (
 	"context"
-	"log"
 	"sync/atomic"
 	"time"
 
@@ -30,17 +29,7 @@ func Run(rootCtx context.Context, withKillTest bool) {
 		go kt.Run(rootCtx)
 	}
 
-	go func() {
-		for {
-			select {
-			case <-time.Tick(time.Second * 10):
-				num := atomic.LoadInt64(&hid) * int64(cfg.SchemaCfg.SortKeyBatch)
-				log.Printf("verified %d records in total", num)
-			case <-rootCtx.Done():
-				return
-			}
-		}
-	}()
+	go tools.ProgressReport(rootCtx, "verify", &hid, cfg.SchemaCfg.SortKeyBatch)
 
 	// periodically verify the old data to ensure they are not lost.
 	go func() {

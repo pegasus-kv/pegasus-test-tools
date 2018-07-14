@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/XiaoMi/pegasus-go-client/pegasus"
-	"github.com/XiaoMi/pegasus-go-client/pegasus2"
 )
 
 type SchemaConfig struct {
@@ -20,7 +19,7 @@ type SchemaConfig struct {
 }
 
 type Verifier struct {
-	c  *pegasus2.Client
+	c  pegasus.Client
 	tb pegasus.TableConnector
 
 	schema *SchemaConfig
@@ -33,7 +32,7 @@ func NewVerifier(clientCfg pegasus.Config, schemaCfg *SchemaConfig, rootCtx cont
 	v := new(Verifier)
 
 	v.opTimeout = time.Millisecond * 100
-	v.c = pegasus2.NewClient(clientCfg)
+	v.c = pegasus.NewClient(clientCfg)
 	v.rootCtx = rootCtx
 
 	var err error

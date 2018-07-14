@@ -2,7 +2,6 @@ package dcheck
 
 import (
 	"context"
-	"log"
 	"sync/atomic"
 	"time"
 
@@ -35,17 +34,7 @@ func Run(rootCtx context.Context, withKillTest bool) {
 	pendingHid := int64(0)
 	lastVerifiedTs := time.Now()
 
-	go func() {
-		for {
-			select {
-			case <-time.Tick(time.Second * 50):
-				num := atomic.LoadInt64(&hid) * int64(cfg.SchemaCfg.SortKeyBatch)
-				log.Printf("verified %d records in total", num)
-			case <-rootCtx.Done():
-				return
-			}
-		}
-	}()
+	go tools.ProgressReport(rootCtx, "verify", &hid, cfg.SchemaCfg.SortKeyBatch)
 
 	go func() {
 		for {
