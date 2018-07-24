@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"github.com/pegasus-kv/pegasus-test-tools/tools/bbench"
 	"github.com/pegasus-kv/pegasus-test-tools/tools/dcheck"
 	"github.com/pegasus-kv/pegasus-test-tools/tools/scheck"
 	"github.com/spf13/cobra"
@@ -37,21 +35,5 @@ func newSCheckCommand() *cobra.Command {
 		Run:   runSCheckCommand,
 	}
 	m.Flags().BoolVarP(&withKillTest, "kill", "k", false, "will randomly kill servers")
-	return m
-}
-
-func runBBenchCommand(cmd *cobra.Command, args []string) {
-	if len(args) != 1 && (args[0] != "load" && args[0] != "run") {
-		fmt.Println("invalid argument: ", args)
-	}
-	bbench.Run(globalContext, args[0])
-}
-
-func newBBenchCommand() *cobra.Command {
-	m := &cobra.Command{
-		Use:   "bbench",
-		Short: "benchmark of batch operations",
-		Run:   runBBenchCommand,
-	}
 	return m
 }

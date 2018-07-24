@@ -55,7 +55,6 @@ func main() {
 	rootCmd.AddCommand(
 		newSCheckCommand(),
 		newDCheckCommand(),
-		newBBenchCommand(),
 	)
 
 	cobra.EnablePrefixMatching = true

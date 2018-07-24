@@ -21,6 +21,7 @@ func LoadAndUnmarshalConfig(filePath string, cfg interface{}) {
 	json.Unmarshal(rawCfg, cfg)
 }
 
+// Periodically reports the current progress of `action`.
 func ProgressReport(rootCtx context.Context, action string, id *int64, recordsPerId int) {
 	for {
 		select {

@@ -29,8 +29,8 @@ func Run(rootCtx context.Context, withKillTest bool) {
 	}
 
 	hid := int64(0)
-	verifiedHid := int64(0)
-	duplicatedHid := int64(0) // [0, duplicated] are assumed to be duplicated.
+	masterHid := int64(0)     // [0, masterHid] are be written on master
+	duplicatedHid := int64(0) // [0, duplicatedHid] are duplicated.
 	pendingHid := int64(0)
 	lastVerifiedTs := time.Now()
 
@@ -38,7 +38,7 @@ func Run(rootCtx context.Context, withKillTest bool) {
 
 	go func() {
 		for {
-			v1.FullScan(atomic.LoadInt64(&verifiedHid))
+			v1.FullScan(atomic.LoadInt64(&masterHid))
 			tools.WaitTil(rootCtx, time.Second*60)
 		}
 	}()
@@ -64,7 +64,7 @@ func Run(rootCtx context.Context, withKillTest bool) {
 		}
 
 		// mark verified point
-		atomic.StoreInt64(&verifiedHid, hid)
+		atomic.StoreInt64(&masterHid, hid)
 
 		atomic.AddInt64(&hid, 1)
 
