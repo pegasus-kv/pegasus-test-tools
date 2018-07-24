@@ -19,8 +19,9 @@ type SchemaConfig struct {
 }
 
 type Verifier struct {
-	c  pegasus.Client
-	tb pegasus.TableConnector
+	clientCfg *pegasus.Config
+	c         pegasus.Client
+	tb        pegasus.TableConnector
 
 	schema *SchemaConfig
 
@@ -31,8 +32,9 @@ type Verifier struct {
 func NewVerifier(clientCfg pegasus.Config, schemaCfg *SchemaConfig, rootCtx context.Context) *Verifier {
 	v := new(Verifier)
 
-	v.opTimeout = time.Millisecond * 100
+	v.opTimeout = time.Second * 1
 	v.c = pegasus.NewClient(clientCfg)
+	v.clientCfg = &clientCfg
 	v.rootCtx = rootCtx
 
 	var err error
@@ -158,10 +160,10 @@ func (v *Verifier) ReadBatchOrDie(hid int64) {
 	}
 }
 
-// Full scan the entire table to ensure data with hashKeys ranging in [0, hid]
+// Full scan the entire table to ensure data with hashKeys ranging in [0, hid)
 // are not lost.
 func (v *Verifier) FullScan(hid int64) {
-	for i := int64(0); i <= hid; i++ {
+	for i := int64(0); i < hid; i++ {
 		// TODO(wutao1): use scan instead.
 		v.ReadBatchOrDie(hid)
 
@@ -172,7 +174,7 @@ func (v *Verifier) FullScan(hid int64) {
 		}
 	}
 
-	log.Printf("full scan complete [hid: %d]", hid)
+	log.Printf("full scan complete [hid: %d, meta: %s]", hid, v.clientCfg.MetaServers[0])
 }
 
 func WaitTil(ctx context.Context, duration time.Duration) {

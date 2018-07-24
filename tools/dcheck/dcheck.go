@@ -34,7 +34,7 @@ func Run(rootCtx context.Context, withKillTest bool) {
 	pendingHid := int64(0)
 	lastVerifiedTs := time.Now()
 
-	go tools.ProgressReport(rootCtx, "verify", &hid, cfg.SchemaCfg.SortKeyBatch)
+	go tools.ProgressReport(rootCtx, "verify", &duplicatedHid, cfg.SchemaCfg.SortKeyBatch)
 
 	go func() {
 		for {
