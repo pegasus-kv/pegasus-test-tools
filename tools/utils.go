@@ -22,12 +22,12 @@ func LoadAndUnmarshalConfig(filePath string, cfg interface{}) {
 }
 
 // Periodically reports the current progress of `action`.
-func ProgressReport(rootCtx context.Context, action string, id *int64, recordsPerId int) {
+func ProgressReport(rootCtx context.Context, prefix string, period time.Duration, id *int64, recordsPerId int) {
 	for {
 		select {
-		case <-time.Tick(time.Second * 10):
+		case <-time.Tick(period):
 			num := atomic.LoadInt64(id) * int64(recordsPerId)
-			log.Printf("%s: %d records in total", action, num)
+			log.Printf("%s: %d records in total", prefix, num)
 		case <-rootCtx.Done():
 			return
 		}

@@ -34,19 +34,17 @@ func Run(rootCtx context.Context, withKillTest bool) {
 	pendingHid := int64(0)
 	lastVerifiedTs := time.Now()
 
-	go tools.ProgressReport(rootCtx, "verify", &duplicatedHid, cfg.SchemaCfg.SortKeyBatch)
+	go tools.ProgressReport(rootCtx, "duplicated", 60*time.Second, &duplicatedHid, cfg.SchemaCfg.SortKeyBatch)
 
 	go func() {
-		for {
+		for tools.WaitTil(rootCtx, time.Second*60) {
 			v1.FullScan(atomic.LoadInt64(&masterHid))
-			tools.WaitTil(rootCtx, time.Second*60)
 		}
 	}()
 
 	go func() {
-		for {
+		for tools.WaitTil(rootCtx, time.Second*60) {
 			v2.FullScan(atomic.LoadInt64(&duplicatedHid))
-			tools.WaitTil(rootCtx, time.Second*60)
 		}
 	}()
 

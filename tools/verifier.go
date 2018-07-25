@@ -177,9 +177,11 @@ func (v *Verifier) FullScan(hid int64) {
 	log.Printf("full scan complete [hid: %d, meta: %s]", hid, v.clientCfg.MetaServers[0])
 }
 
-func WaitTil(ctx context.Context, duration time.Duration) {
+func WaitTil(ctx context.Context, duration time.Duration) bool {
 	select {
 	case <-ctx.Done():
+		return false
 	case <-time.After(duration):
+		return true
 	}
 }

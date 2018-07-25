@@ -2,11 +2,10 @@ package scheck
 
 import (
 	"context"
-	"sync/atomic"
-	"time"
-
 	"github.com/XiaoMi/pegasus-go-client/pegasus"
 	"github.com/pegasus-kv/pegasus-test-tools/tools"
+	"sync/atomic"
+	"time"
 )
 
 type Config struct {
@@ -29,13 +28,12 @@ func Run(rootCtx context.Context, withKillTest bool) {
 		go kt.Run(rootCtx)
 	}
 
-	go tools.ProgressReport(rootCtx, "verify", &hid, cfg.SchemaCfg.SortKeyBatch)
+	go tools.ProgressReport(rootCtx, "verify", time.Second*10, &hid, cfg.SchemaCfg.SortKeyBatch)
 
 	// periodically verify the old data to ensure they are not lost.
 	go func() {
-		for {
+		for tools.WaitTil(rootCtx, time.Second*60) {
 			v.FullScan(atomic.LoadInt64(&verifiedHid))
-			tools.WaitTil(rootCtx, time.Second*60)
 		}
 	}()
 
