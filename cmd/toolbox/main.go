@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"runtime"
 )
 
 var (
@@ -19,6 +20,8 @@ var (
 )
 
 func main() {
+	runtime.GOMAXPROCS(2)
+
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc,
 		syscall.SIGHUP,

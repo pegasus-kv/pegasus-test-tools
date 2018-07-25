@@ -7,6 +7,7 @@ import (
 
 	"github.com/XiaoMi/pegasus-go-client/pegasus"
 	"github.com/pegasus-kv/pegasus-test-tools/tools"
+	"math/rand"
 )
 
 type Config struct {
@@ -37,14 +38,18 @@ func Run(rootCtx context.Context, withKillTest bool) {
 	go tools.ProgressReport(rootCtx, "duplicated", 60*time.Second, &duplicatedHid, cfg.SchemaCfg.SortKeyBatch)
 
 	go func() {
-		for tools.WaitTil(rootCtx, time.Second*60) {
+		sleepTime := rand.Intn(60) + 50
+		for tools.WaitTil(rootCtx, time.Duration(sleepTime)*time.Second) {
 			v1.FullScan(atomic.LoadInt64(&masterHid))
+			sleepTime += rand.Intn(2) + 2
 		}
 	}()
 
 	go func() {
-		for tools.WaitTil(rootCtx, time.Second*60) {
+		sleepTime := rand.Intn(60) + 50
+		for tools.WaitTil(rootCtx, time.Duration(sleepTime)*time.Second) {
 			v2.FullScan(atomic.LoadInt64(&duplicatedHid))
+			sleepTime += rand.Intn(2) + 2
 		}
 	}()
 
