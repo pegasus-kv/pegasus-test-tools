@@ -54,7 +54,7 @@ func (v *Verifier) setOrDie(hashKey []byte, sortKey []byte, value []byte) {
 	for tries := 0; tries < 30; tries++ {
 		ctx, _ := context.WithTimeout(v.rootCtx, v.opTimeout)
 		if err = v.tb.Set(ctx, hashKey, sortKey, value); err != nil {
-			log.Printf("%s [hashkey: %s, sortkey: %s]", err, hashKey, sortKey)
+			log.Printf("%s [hashkey: %s, sortkey: %s, tried: %d]", err, hashKey, sortKey, tries)
 			time.Sleep(1 * time.Second)
 
 			// check if cancelled
@@ -80,7 +80,7 @@ func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
 	for tries := 0; tries < 30; tries++ {
 		ctx, _ := context.WithTimeout(v.rootCtx, v.opTimeout)
 		if value, err = v.tb.Get(ctx, hashKey, sortKey); err != nil {
-			log.Printf("%s [hashkey: %s, sortkey: %s]", err, hashKey, sortKey)
+			log.Printf("%s [hashkey: %s, sortkey: %s, tried: %d]", err, hashKey, sortKey, tries)
 			time.Sleep(1 * time.Second)
 
 			// check if cancelled
