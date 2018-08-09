@@ -5,9 +5,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	"math/rand"
+
 	"github.com/XiaoMi/pegasus-go-client/pegasus"
 	"github.com/pegasus-kv/pegasus-test-tools/tools"
-	"math/rand"
 )
 
 type Config struct {
@@ -41,7 +42,7 @@ func Run(rootCtx context.Context, withKillTest bool) {
 		sleepTime := rand.Intn(60) + 50
 		for tools.WaitTil(rootCtx, time.Duration(sleepTime)*time.Second) {
 			v1.FullScan(atomic.LoadInt64(&masterHid))
-			sleepTime += rand.Intn(2) + 2
+			sleepTime += rand.Intn(5) + 10
 		}
 	}()
 
@@ -49,7 +50,7 @@ func Run(rootCtx context.Context, withKillTest bool) {
 		sleepTime := rand.Intn(60) + 50
 		for tools.WaitTil(rootCtx, time.Duration(sleepTime)*time.Second) {
 			v2.FullScan(atomic.LoadInt64(&duplicatedHid))
-			sleepTime += rand.Intn(2) + 2
+			sleepTime += rand.Intn(5) + 10
 		}
 	}()
 

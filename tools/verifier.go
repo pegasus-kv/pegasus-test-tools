@@ -51,7 +51,7 @@ func NewVerifier(clientCfg pegasus.Config, schemaCfg *SchemaConfig, rootCtx cont
 
 func (v *Verifier) setOrDie(hashKey []byte, sortKey []byte, value []byte) {
 	var err error
-	for tries := 0; tries < 30; tries++ {
+	for tries := 0; tries < 100; tries++ {
 		ctx, _ := context.WithTimeout(v.rootCtx, v.opTimeout)
 		if err = v.tb.Set(ctx, hashKey, sortKey, value); err != nil {
 			log.Printf("%s [hashkey: %s, sortkey: %s, tried: %d]", err, hashKey, sortKey, tries)
@@ -77,7 +77,7 @@ func (v *Verifier) setOrDie(hashKey []byte, sortKey []byte, value []byte) {
 
 func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
 	var err error
-	for tries := 0; tries < 30; tries++ {
+	for tries := 0; tries < 100; tries++ {
 		ctx, _ := context.WithTimeout(v.rootCtx, v.opTimeout)
 		if value, err = v.tb.Get(ctx, hashKey, sortKey); err != nil {
 			log.Printf("%s [hashkey: %s, sortkey: %s, tried: %d]", err, hashKey, sortKey, tries)

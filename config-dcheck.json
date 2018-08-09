@@ -1,16 +1,12 @@
 {
   "client": {
     "meta_servers": [
-      "127.0.0.1:34601",
-      "127.0.0.1:34602",
-      "127.0.0.1:34603"
+      "127.0.0.1:34601"
     ]
   },
   "remote_client": {
     "meta_servers": [
-      "127.0.0.1:34601",
-      "127.0.0.1:34602",
-      "127.0.0.1:34603"
+      "172.17.0.2:34601"
     ]
   },
   "schema": {
@@ -22,6 +18,6 @@
   },
   "kill": {
     "run_script_dir": "/home/mi/git/pegasus",
-    "total_replica_count": 5
+    "total_replica_count": 4
   }
 }

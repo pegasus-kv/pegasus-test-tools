@@ -60,7 +60,7 @@ func (s *ServerKillTest) Run(ctx context.Context) {
 
 func (s *ServerKillTest) round(roundId int) {
 	// sleep for a random time before kill
-	sleepTime := rand.Intn(60) + 1
+	sleepTime := rand.Intn(60) + 60
 	log.Printf("sleep %ds before kill", sleepTime)
 	time.Sleep(time.Second * time.Duration(sleepTime))
 
