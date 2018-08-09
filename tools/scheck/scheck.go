@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/XiaoMi/pegasus-go-client/pegasus"
 	"github.com/pegasus-kv/pegasus-test-tools/tools"
+	"math/rand"
 	"sync/atomic"
 	"time"
 )
@@ -32,8 +33,10 @@ func Run(rootCtx context.Context, withKillTest bool) {
 
 	// periodically verify the old data to ensure they are not lost.
 	go func() {
-		for tools.WaitTil(rootCtx, time.Second*60) {
+		sleepTime := rand.Intn(60) + 50
+		for tools.WaitTil(rootCtx, time.Duration(sleepTime)*time.Second) {
 			v.FullScan(atomic.LoadInt64(&verifiedHid))
+			sleepTime += rand.Intn(5) + 10
 		}
 	}()
 

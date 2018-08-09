@@ -19,6 +19,7 @@ const (
 type KillTestConfig struct {
 	RunScriptDir    string `json:"run_script_dir"`
 	TotalReplicaCnt int    `json:"total_replica_count"`
+	TotalMetaCnt    int    `json:"total_meta_count"`
 }
 
 // Randomly pick one replica server, kill it and restart it.
@@ -64,20 +65,39 @@ func (s *ServerKillTest) round(roundId int) {
 	log.Printf("sleep %ds before kill", sleepTime)
 	time.Sleep(time.Second * time.Duration(sleepTime))
 
-	id := rand.Intn(s.cfg.TotalReplicaCnt) + 1
-	log.Printf("killing replica %d at round %d", id, roundId)
-	if err := s.oc.killInstance(iTypeReplica, id); err != nil {
-		log.Fatalf("failed to kill replica %d: %s", id, err)
-	}
+	metaOrReplica := rand.Intn(2)
+	if metaOrReplica == 0 {
+		id := rand.Intn(s.cfg.TotalReplicaCnt) + 1
+		log.Printf("killing replica %d at round %d", id, roundId)
+		if err := s.oc.killInstance(iTypeReplica, id); err != nil {
+			log.Fatalf("failed to kill replica %d: %s", id, err)
+		}
 
-	// sleep for a random time before restart
-	sleepTime = rand.Intn(60) + 1
-	log.Printf("sleep %ds before restart", sleepTime)
-	time.Sleep(time.Second * time.Duration(sleepTime))
+		// sleep for a random time before restart
+		sleepTime = rand.Intn(60) + 1
+		log.Printf("sleep %ds before restart", sleepTime)
+		time.Sleep(time.Second * time.Duration(sleepTime))
 
-	log.Printf("restarting replica %d at round %d", id, roundId)
-	if err := s.oc.startInstance(iTypeReplica, id); err != nil {
-		log.Fatalf("failed to recover replica %d: %s", id, err)
+		log.Printf("restarting replica %d at round %d", id, roundId)
+		if err := s.oc.startInstance(iTypeReplica, id); err != nil {
+			log.Fatalf("failed to recover replica %d: %s", id, err)
+		}
+	} else if metaOrReplica == 1 {
+		id := rand.Intn(s.cfg.TotalMetaCnt) + 1
+		log.Printf("killing meta %d at round %d", id, roundId)
+		if err := s.oc.killInstance(iTypeMeta, id); err != nil {
+			log.Fatalf("failed to kill meta %d: %s", id, err)
+		}
+
+		// sleep for a random time before restart
+		sleepTime = rand.Intn(60) + 1
+		log.Printf("sleep %ds before restart", sleepTime)
+		time.Sleep(time.Second * time.Duration(sleepTime))
+
+		log.Printf("restarting meta %d at round %d", id, roundId)
+		if err := s.oc.startInstance(iTypeReplica, id); err != nil {
+			log.Fatalf("failed to recover meta %d: %s", id, err)
+		}
 	}
 }
 

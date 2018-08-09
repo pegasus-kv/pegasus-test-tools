@@ -15,6 +15,7 @@
   },
   "kill": {
     "run_script_dir": "/home/mi/git/pegasus",
-    "total_replica_count": 5
+    "total_replica_count": 5,
+    "total_meta_count": 2
   }
 }
