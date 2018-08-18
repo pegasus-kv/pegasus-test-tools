@@ -12,13 +12,14 @@ import (
 )
 
 type Config struct {
-	ClientCfg pegasus.Config       `json:"client"`
-	RemoteCfg pegasus.Config       `json:"remote_client"`
-	SchemaCfg tools.SchemaConfig   `json:"schema"`
-	KillCfg   tools.KillTestConfig `json:"kill"`
+	ClientCfg        pegasus.Config             `json:"client"`
+	RemoteCfg        pegasus.Config             `json:"remote_client"`
+	SchemaCfg        tools.SchemaConfig         `json:"schema"`
+	KillCfg          tools.KillTestConfig       `json:"kill"`
+	RollingUpdateCfg tools.RollingUpdaterConfig `json:"rolling_update"`
 }
 
-func Run(rootCtx context.Context, withKillTest bool) {
+func Run(rootCtx context.Context, withKillTest bool, withRollingUpdate bool) {
 	cfg := &Config{}
 	tools.LoadAndUnmarshalConfig("config-dcheck.json", cfg)
 
@@ -28,6 +29,10 @@ func Run(rootCtx context.Context, withKillTest bool) {
 	if withKillTest {
 		kt := tools.NewServerKillTest(&cfg.KillCfg)
 		go kt.Run(rootCtx)
+	}
+	if withRollingUpdate {
+		ru := tools.NewRollingUpdater(cfg.RollingUpdateCfg, cfg.ClientCfg.MetaServers)
+		go ru.Run(rootCtx)
 	}
 
 	hid := int64(0)
