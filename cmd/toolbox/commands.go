@@ -7,11 +7,12 @@ import (
 )
 
 var (
-	withKillTest bool
+	withKillTest      bool
+	withRollingUpdate bool
 )
 
 func runDCheckCommand(cmd *cobra.Command, args []string) {
-	dcheck.Run(globalContext, withKillTest)
+	dcheck.Run(globalContext, withKillTest, withRollingUpdate)
 }
 
 func newDCheckCommand() *cobra.Command {
@@ -21,6 +22,7 @@ func newDCheckCommand() *cobra.Command {
 		Run:   runDCheckCommand,
 	}
 	m.Flags().BoolVarP(&withKillTest, "kill", "k", false, "will randomly kill servers")
+	m.Flags().BoolVarP(&withRollingUpdate, "roll", "r", false, "will run rolling update")
 	return m
 }
 
