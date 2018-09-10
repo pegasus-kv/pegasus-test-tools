@@ -3,7 +3,6 @@ package tools
 import (
 	"context"
 	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -52,7 +51,7 @@ func (s *ServerKillTest) Run(ctx context.Context) {
 
 		select {
 		case <-ctx.Done():
-			log.Printf("stopping killer")
+			log.Info("stopping killer")
 			return
 		default:
 		}
@@ -62,42 +61,23 @@ func (s *ServerKillTest) Run(ctx context.Context) {
 func (s *ServerKillTest) round(roundId int) {
 	// sleep for a random time before kill
 	sleepTime := rand.Intn(60) + 60
-	log.Printf("sleep %ds before kill", sleepTime)
+	log.Infof("sleep %ds before kill", sleepTime)
 	time.Sleep(time.Second * time.Duration(sleepTime))
 
-	metaOrReplica := rand.Intn(2)
-	if metaOrReplica == 0 {
-		id := rand.Intn(s.cfg.TotalReplicaCnt) + 1
-		log.Printf("killing replica %d at round %d", id, roundId)
-		if err := s.oc.killInstance(iTypeReplica, id); err != nil {
-			log.Fatalf("failed to kill replica %d: %s", id, err)
-		}
+	id := rand.Intn(s.cfg.TotalReplicaCnt) + 1
+	log.Infof("killing replica %d at round %d", id, roundId)
+	if err := s.oc.killInstance(iTypeReplica, id); err != nil {
+		log.Fatalf("failed to kill replica %d: %s", id, err)
+	}
 
-		// sleep for a random time before restart
-		sleepTime = rand.Intn(60) + 1
-		log.Printf("sleep %ds before restart", sleepTime)
-		time.Sleep(time.Second * time.Duration(sleepTime))
+	// sleep for a random time before restart
+	sleepTime = rand.Intn(60) + 1
+	log.Infof("sleep %ds before restart", sleepTime)
+	time.Sleep(time.Second * time.Duration(sleepTime))
 
-		log.Printf("restarting replica %d at round %d", id, roundId)
-		if err := s.oc.startInstance(iTypeReplica, id); err != nil {
-			log.Fatalf("failed to recover replica %d: %s", id, err)
-		}
-	} else if metaOrReplica == 1 {
-		id := rand.Intn(s.cfg.TotalMetaCnt) + 1
-		log.Printf("killing meta %d at round %d", id, roundId)
-		if err := s.oc.killInstance(iTypeMeta, id); err != nil {
-			log.Fatalf("failed to kill meta %d: %s", id, err)
-		}
-
-		// sleep for a random time before restart
-		sleepTime = rand.Intn(60) + 1
-		log.Printf("sleep %ds before restart", sleepTime)
-		time.Sleep(time.Second * time.Duration(sleepTime))
-
-		log.Printf("restarting meta %d at round %d", id, roundId)
-		if err := s.oc.startInstance(iTypeReplica, id); err != nil {
-			log.Fatalf("failed to recover meta %d: %s", id, err)
-		}
+	log.Infof("restarting replica %d at round %d", id, roundId)
+	if err := s.oc.startInstance(iTypeReplica, id); err != nil {
+		log.Fatalf("failed to recover replica %d: %s", id, err)
 	}
 }
 
@@ -117,10 +97,10 @@ func (o *oneboxController) startInstance(itype string, idx int) error {
 func (o *oneboxController) control(itype string, idx int, op string) error {
 	cmdStr := fmt.Sprintf("cd %s; bash run.sh %s_onebox_instance -%s %d",
 		o.runScriptPath, op, itype, idx)
-	log.Printf("execute shell command \"%s\"", cmdStr)
+	log.Infof("execute shell command \"%s\"", cmdStr)
 	cmd := exec.Command("bash", "-c", cmdStr)
 
 	output, err := cmd.Output()
-	log.Printf(string(output))
+	log.Info(string(output))
 	return err
 }

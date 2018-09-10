@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/XiaoMi/pegasus-go-client/pegasus"
@@ -42,7 +41,7 @@ func NewVerifier(clientCfg pegasus.Config, schemaCfg *SchemaConfig, rootCtx cont
 
 	v.tb, err = v.c.OpenTable(ctx, schemaCfg.AppName)
 	if err != nil {
-		log.Fatalln(err)
+		log.Critical(err)
 	}
 
 	v.schema = schemaCfg
@@ -54,7 +53,7 @@ func (v *Verifier) setOrDie(hashKey []byte, sortKey []byte, value []byte) {
 	for tries := 0; tries < 100; tries++ {
 		ctx, _ := context.WithTimeout(v.rootCtx, v.opTimeout)
 		if err = v.tb.Set(ctx, hashKey, sortKey, value); err != nil {
-			log.Printf("%s [hashkey: %s, sortkey: %s, tried: %d]", err, hashKey, sortKey, tries)
+			log.Infof("%s [hashkey: %s, sortkey: %s, tried: %d]", err, hashKey, sortKey, tries)
 			time.Sleep(1 * time.Second)
 
 			// check if cancelled
@@ -72,7 +71,7 @@ func (v *Verifier) setOrDie(hashKey []byte, sortKey []byte, value []byte) {
 		return
 	}
 
-	log.Fatalln(err)
+	log.Critical(err)
 }
 
 func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
@@ -80,7 +79,7 @@ func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
 	for tries := 0; tries < 100; tries++ {
 		ctx, _ := context.WithTimeout(v.rootCtx, v.opTimeout)
 		if value, err = v.tb.Get(ctx, hashKey, sortKey); err != nil {
-			log.Printf("%s [hashkey: %s, sortkey: %s, tried: %d]", err, hashKey, sortKey, tries)
+			log.Infof("%s [hashkey: %s, sortkey: %s, tried: %d]", err, hashKey, sortKey, tries)
 			time.Sleep(1 * time.Second)
 
 			// check if cancelled
@@ -104,7 +103,7 @@ func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
 		return
 	}
 
-	log.Fatalln(err)
+	log.Critical(err)
 	return // unreachable
 }
 
@@ -174,7 +173,7 @@ func (v *Verifier) FullScan(hid int64) {
 		}
 	}
 
-	log.Printf("full scan complete [hid: %d, meta: %s]", hid, v.clientCfg.MetaServers[0])
+	log.Infof("full scan complete [hid: %d, meta: %s]", hid, v.clientCfg.MetaServers[0])
 }
 
 func WaitTil(ctx context.Context, duration time.Duration) bool {

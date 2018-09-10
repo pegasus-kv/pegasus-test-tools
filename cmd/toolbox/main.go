@@ -3,15 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
+	"github.com/XiaoMi/pegasus-go-client/pegalog"
+	"github.com/op/go-logging"
 	"github.com/spf13/cobra"
-	"runtime"
 )
 
 var (
@@ -19,8 +20,50 @@ var (
 	globalCancel  context.CancelFunc
 )
 
+var log = logging.MustGetLogger("main")
+
+type pegasusLogger struct {
+	plog *logging.Logger
+}
+
+func (p *pegasusLogger) Fatal(args ...interface{}) {
+	p.plog.Critical(args...)
+}
+
+func (p *pegasusLogger) Fatalf(format string, args ...interface{}) {
+	p.plog.Criticalf(format, args...)
+}
+
+func (p *pegasusLogger) Fatalln(args ...interface{}) {
+	p.plog.Critical(args...)
+}
+
+func (p *pegasusLogger) Print(args ...interface{}) {
+	p.plog.Info(args...)
+}
+
+func (p *pegasusLogger) Printf(format string, args ...interface{}) {
+	p.plog.Infof(format, args...)
+}
+
+func (p *pegasusLogger) Println(args ...interface{}) {
+	p.plog.Info(args...)
+}
+
 func main() {
 	runtime.GOMAXPROCS(2)
+
+	lf, err := os.OpenFile("tlog.txt", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0660)
+	if err != nil {
+		panic(err)
+	}
+	beLogFile := logging.NewLogBackend(lf, "", 0)
+	beStderr := logging.NewLogBackend(os.Stderr, "", 0)
+	logging.SetBackend(beLogFile, beStderr)
+	logging.SetFormatter(logging.MustStringFormatter("%{color}%{time:15:04:05.000} ▶ %{color:reset} %{message}"))
+	pegalog.SetLogger(&pegasusLogger{
+		plog: logging.MustGetLogger("pegasus"),
+	})
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc,
@@ -34,16 +77,16 @@ func main() {
 	closeDone := make(chan struct{}, 1)
 	go func() {
 		sig := <-sc
-		log.Printf("\nGot signal [%v] to exit.\n", sig)
+		log.Infof("\nGot signal [%v] to exit.\n", sig)
 		globalCancel()
 
 		select {
 		case <-sc:
 			// send signal again, return directly
-			log.Printf("\nGot signal [%v] again to exit.\n", sig)
+			log.Infof("\nGot signal [%v] again to exit.\n", sig)
 			os.Exit(1)
 		case <-time.After(10 * time.Second):
-			log.Printf("\nWait 10s for closed, force exit\n")
+			log.Infof("\nWait 10s for closed, force exit\n")
 			os.Exit(1)
 		case <-closeDone:
 			return

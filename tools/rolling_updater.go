@@ -3,7 +3,6 @@ package tools
 import (
 	"context"
 	"fmt"
-	"log"
 	"math/rand"
 	"os/exec"
 	"strings"
@@ -32,7 +31,7 @@ func (r *RollingUpdater) Run(ctx context.Context) {
 
 		select {
 		case <-ctx.Done():
-			log.Printf("stopping rolling updater")
+			log.Info("stopping rolling updater")
 			return
 		default:
 		}
@@ -41,16 +40,16 @@ func (r *RollingUpdater) Run(ctx context.Context) {
 
 func (r *RollingUpdater) round(roundId int) {
 	// sleep for a random time before rolling update
-	sleepTime := rand.Intn(60) + 60
-	log.Printf("sleep %ds before kill", sleepTime)
+	sleepTime := rand.Intn(120) + 60
+	log.Infof("sleep %ds before kill", sleepTime)
 	time.Sleep(time.Second * time.Duration(sleepTime))
 
-	cmdStr := fmt.Sprintf("cd %s; bash pegasus_rolling_update.sh %s %s all 0", r.cfg.ScriptDir, r.cfg.ClusterName, r.metaServers)
-	log.Printf("execute shell command \"%s\"", cmdStr)
+	cmdStr := fmt.Sprintf("cd %s; ./deploy rolling_update pegasus %s --skip_confirm --time_interval 10 --job replica meta", r.cfg.ScriptDir, r.cfg.ClusterName)
+	log.Infof("execute shell command \"%s\"", cmdStr)
 	cmd := exec.Command("bash", "-c", cmdStr)
 
 	output, err := cmd.Output()
-	log.Printf(string(output))
+	log.Info(string(output))
 	if err != nil {
 		log.Fatal(err)
 	}

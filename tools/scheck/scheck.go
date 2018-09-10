@@ -2,11 +2,12 @@ package scheck
 
 import (
 	"context"
-	"github.com/XiaoMi/pegasus-go-client/pegasus"
-	"github.com/pegasus-kv/pegasus-test-tools/tools"
 	"math/rand"
 	"sync/atomic"
 	"time"
+
+	"github.com/XiaoMi/pegasus-go-client/pegasus"
+	"github.com/pegasus-kv/pegasus-test-tools/tools"
 )
 
 type Config struct {

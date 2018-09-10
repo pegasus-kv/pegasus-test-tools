@@ -2,10 +2,9 @@ package dcheck
 
 import (
 	"context"
+	"math/rand"
 	"sync/atomic"
 	"time"
-
-	"math/rand"
 
 	"github.com/XiaoMi/pegasus-go-client/pegasus"
 	"github.com/pegasus-kv/pegasus-test-tools/tools"
@@ -36,7 +35,7 @@ func Run(rootCtx context.Context, withKillTest bool, withRollingUpdate bool) {
 	}
 
 	hid := int64(0)
-	masterHid := int64(0)     // [0, masterHid] are be written on master
+	masterHid := int64(0)     // [0, masterHid] are written on master
 	duplicatedHid := int64(0) // [0, duplicatedHid] are duplicated.
 	pendingHid := int64(0)
 	lastVerifiedTs := time.Now()
@@ -63,9 +62,9 @@ func Run(rootCtx context.Context, withKillTest bool, withRollingUpdate bool) {
 		v1.WriteBatchOrDie(hid)
 		v1.ReadBatchOrDie(hid)
 
-		if time.Now().Sub(lastVerifiedTs) > time.Second*60 {
+		if time.Now().Sub(lastVerifiedTs) > time.Second*120 {
 			if pendingHid > 0 {
-				// written data must arrive at remote cluster within 60s
+				// written data must arrive at remote cluster within 120s
 				atomic.StoreInt64(&duplicatedHid, pendingHid)
 			}
 			atomic.StoreInt64(&pendingHid, hid)

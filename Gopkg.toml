@@ -33,6 +33,10 @@
   name = "github.com/spf13/cobra"
   version = "0.0.3"
 
+[[constraint]]
+  name = "github.com/op/go-logging"
+  version = "master"
+
 [prune]
   go-tests = true
   unused-packages = true

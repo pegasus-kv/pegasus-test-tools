@@ -4,17 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"path/filepath"
 	"sync/atomic"
 	"time"
+
+	"github.com/op/go-logging"
 )
+
+var log = logging.MustGetLogger("tools")
 
 func LoadAndUnmarshalConfig(filePath string, cfg interface{}) {
 	cfgPath, _ := filepath.Abs(filePath)
 	rawCfg, err := ioutil.ReadFile(cfgPath)
 	if err != nil {
-		log.Fatalln(err)
+		log.Critical(err)
 		return
 	}
 
@@ -27,7 +30,7 @@ func ProgressReport(rootCtx context.Context, prefix string, period time.Duration
 		select {
 		case <-time.Tick(period):
 			num := atomic.LoadInt64(id) * int64(recordsPerId)
-			log.Printf("%s: %d records in total", prefix, num)
+			log.Infof("%s: %d records in total", prefix, num)
 		case <-rootCtx.Done():
 			return
 		}
