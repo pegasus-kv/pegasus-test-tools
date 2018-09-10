@@ -8,16 +8,19 @@ import (
 	"fmt"
 )
 
+// PError is the return error type of all interfaces of pegasus client.
 type PError struct {
 	// Err is the error that occurred during the operation.
 	Err error
 
-	// Op is the operation that caused this error
+	// The failed operation
 	Op OpType
 }
 
+// OpType is the type of operation that led to PError.
 type OpType int
 
+// Operation types
 const (
 	OpQueryConfig OpType = iota
 	OpGet
@@ -29,10 +32,13 @@ const (
 	OpClose
 	OpMultiSet
 	OpTTL
+	OpExist
 	OpGetScanner
 	OpGetUnorderedScanners
 	OpNext
 	OpScannerClose
+	OpCheckAndSet
+	OpSortKeyCount
 )
 
 var opTypeToStringMap = map[OpType]string{
@@ -46,10 +52,13 @@ var opTypeToStringMap = map[OpType]string{
 	OpClose:                "Close",
 	OpMultiSet:             "MULTI_SET",
 	OpTTL:                  "TTL",
+	OpExist:                "EXIST",
 	OpGetScanner:           "GET_SCANNER",
 	OpGetUnorderedScanners: "GET_UNORDERED_SCANNERS",
 	OpNext:                 "SCAN_NEXT",
 	OpScannerClose:         "SCANNER_CLOSE",
+	OpCheckAndSet:          "CHECK_AND_SET",
+	OpSortKeyCount:         "SORTKEY_COUNT",
 }
 
 func (op OpType) String() string {
