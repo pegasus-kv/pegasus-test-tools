@@ -162,6 +162,8 @@ func (v *Verifier) ReadBatchOrDie(hid int64) {
 // Full scan the entire table to ensure data with hashKeys ranging in [0, hid)
 // are not lost.
 func (v *Verifier) FullScan(hid int64) {
+	log.Infof("%s: start full scan[hid: %d]", v, hid)
+
 	for i := int64(0); i < hid; i++ {
 		// TODO(wutao1): use scan instead.
 		v.ReadBatchOrDie(hid)

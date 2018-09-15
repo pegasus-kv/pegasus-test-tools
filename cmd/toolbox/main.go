@@ -53,7 +53,8 @@ func (p *pegasusLogger) Println(args ...interface{}) {
 func main() {
 	runtime.GOMAXPROCS(2)
 
-	lf, err := os.OpenFile("tlog.txt", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0660)
+	filename := fmt.Sprintf("tlog-%s.txt", time.Now().Format("20060102150405"))
+	lf, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0660)
 	if err != nil {
 		panic(err)
 	}
