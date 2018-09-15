@@ -28,6 +28,12 @@
   version = "v1.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/op/go-logging"
+  packages = ["."]
+  revision = "970db520ece77730c7e4724c61121037378659d9"
+
+[[projects]]
   name = "github.com/spf13/cobra"
   packages = ["."]
   revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
@@ -54,6 +60,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5f60cdb089543c021a618590e1758ccfdf93ff38d1a73021d485e21b235b3a82"
+  inputs-digest = "652adbe066ca339e6e8d533450a9f15dd575fd069414258315e21417bb1fe2af"
   solver-name = "gps-cdcl"
   solver-version = 1
