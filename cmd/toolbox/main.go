@@ -27,15 +27,15 @@ type pegasusLogger struct {
 }
 
 func (p *pegasusLogger) Fatal(args ...interface{}) {
-	p.plog.Critical(args...)
+	p.plog.Panic(args...)
 }
 
 func (p *pegasusLogger) Fatalf(format string, args ...interface{}) {
-	p.plog.Criticalf(format, args...)
+	p.plog.Panicf(format, args...)
 }
 
 func (p *pegasusLogger) Fatalln(args ...interface{}) {
-	p.plog.Critical(args...)
+	p.plog.Panic(args...)
 }
 
 func (p *pegasusLogger) Print(args ...interface{}) {
