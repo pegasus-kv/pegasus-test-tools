@@ -3,24 +3,23 @@ package tools
 import (
 	"context"
 	"fmt"
-	"math/rand"
+	"math"
 	"os/exec"
 	"strings"
 	"time"
 )
 
 type RollingUpdaterConfig struct {
-	ScriptDir   string `json:"script_dir"`
-	ClusterName string `json:"cluster_name"`
+	ScriptDir string `json:"script_dir"`
 }
 
 type RollingUpdater struct {
-	cfg         RollingUpdaterConfig
-	metaServers string
+	cfg       RollingUpdaterConfig
+	clientCfg ClientConfig
 }
 
-func NewRollingUpdater(config RollingUpdaterConfig, metaServers []string) *RollingUpdater {
-	return &RollingUpdater{cfg: config, metaServers: strings.Join(metaServers, ",")}
+func NewRollingUpdater(config RollingUpdaterConfig, clientConfig ClientConfig) *RollingUpdater {
+	return &RollingUpdater{cfg: config, clientCfg: clientConfig}
 }
 
 func (r *RollingUpdater) Run(ctx context.Context) {
@@ -40,16 +39,17 @@ func (r *RollingUpdater) Run(ctx context.Context) {
 
 func (r *RollingUpdater) round(roundId int) {
 	// sleep for a random time before rolling update
-	sleepTime := rand.Intn(120) + 60
+	sleepTime := int(math.Min(float64(60+20*roundId), 1000))
 	log.Infof("sleep %ds before kill", sleepTime)
 	time.Sleep(time.Second * time.Duration(sleepTime))
 
-	cmdStr := fmt.Sprintf("cd %s; ./deploy rolling_update pegasus %s --skip_confirm --time_interval 10 --job replica meta", r.cfg.ScriptDir, r.cfg.ClusterName)
+	metaServers := strings.Join(r.clientCfg.MetaServers, ",")
+	cmdStr := fmt.Sprintf("cd %s; ./pegasus_rolling_update.sh %s %s all 0", r.cfg.ScriptDir, r.clientCfg.ClusterName, metaServers)
 	log.Infof("execute shell command \"%s\"", cmdStr)
 	cmd := exec.Command("bash", "-c", cmdStr)
 
 	output, err := cmd.Output()
-	log.Info(string(output))
+	log.Critical(string(output))
 	if err != nil {
 		log.Fatal(err)
 	}

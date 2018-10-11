@@ -38,7 +38,7 @@ func Run(rootCtx context.Context, withKillTest bool, withRollingUpdate bool) {
 	remoteClient := pegasus.NewClient(remoteCfg)
 
 	if withRollingUpdate {
-		ru := tools.NewRollingUpdater(cfg.RollingUpdateCfg, cfg.LocalCfg.MetaServers)
+		ru := tools.NewRollingUpdater(cfg.RollingUpdateCfg, cfg.LocalCfg)
 		go ru.Run(rootCtx)
 	}
 	if withKillTest {
