@@ -1,11 +1,13 @@
 {
-  "client": {
+  "local_client": {
+    "cluster_name": "c4tst-dup1",
     "meta_servers": [
       "127.0.0.1:34601",
       "127.0.0.1:34602"
     ]
   },
   "remote_client": {
+    "cluster_name": "c3tst-dup2",
     "meta_servers": [
       "172.17.0.2:34601"
     ]
@@ -25,5 +27,6 @@
   "rolling_update": {
     "script_dir": "",
     "cluster_name": ""
-  }
+  },
+  "workers": 4
 }

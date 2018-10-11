@@ -9,6 +9,11 @@ import (
 	"github.com/XiaoMi/pegasus-go-client/pegasus"
 )
 
+type ClientConfig struct {
+	MetaServers []string `json:"meta_servers"`
+	ClusterName string   `json:"cluster_name"`
+}
+
 type SchemaConfig struct {
 	HashKeyPrefix string `json:"hash_key_prefix"`
 	SortKeyPrefix string `json:"sort_key_prefix"`
@@ -18,22 +23,23 @@ type SchemaConfig struct {
 }
 
 type Verifier struct {
-	clientCfg *pegasus.Config
-	c         pegasus.Client
-	tb        pegasus.TableConnector
+	c  pegasus.Client
+	tb pegasus.TableConnector
 
 	schema *SchemaConfig
 
 	rootCtx   context.Context
 	opTimeout time.Duration
+
+	name string
+	id   int
 }
 
-func NewVerifier(clientCfg pegasus.Config, schemaCfg *SchemaConfig, rootCtx context.Context) *Verifier {
+func NewVerifier(id int, name string, client pegasus.Client, schemaCfg *SchemaConfig, rootCtx context.Context) *Verifier {
 	v := new(Verifier)
 
-	v.opTimeout = time.Second * 1
-	v.c = pegasus.NewClient(clientCfg)
-	v.clientCfg = &clientCfg
+	v.opTimeout = time.Second * 5
+	v.c = client
 	v.rootCtx = rootCtx
 
 	var err error
@@ -41,10 +47,12 @@ func NewVerifier(clientCfg pegasus.Config, schemaCfg *SchemaConfig, rootCtx cont
 
 	v.tb, err = v.c.OpenTable(ctx, schemaCfg.AppName)
 	if err != nil {
-		log.Critical(err)
+		log.Panic(err)
 	}
 
 	v.schema = schemaCfg
+	v.name = name
+	v.id = id
 	return v
 }
 
@@ -71,7 +79,7 @@ func (v *Verifier) setOrDie(hashKey []byte, sortKey []byte, value []byte) {
 		return
 	}
 
-	log.Critical(err)
+	log.Panic(err)
 }
 
 func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
@@ -95,7 +103,7 @@ func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
 
 		// pegasus promises read-after-write consistency
 		if value == nil {
-			log.Fatalf("%s: can't find record: [hashkey: %s, sortkey: %s]", v, string(hashKey), string(sortKey))
+			log.Panicf("%s: can't find record: [hashkey: %s, sortkey: %s]", v, string(hashKey), string(sortKey))
 			// unreachable
 		}
 
@@ -108,7 +116,7 @@ func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
 }
 
 func (v *Verifier) generateKeyRange(hid int64) (hashKey []byte, sortKeys [][]byte) {
-	hashKey = []byte(fmt.Sprintf("%s%d", v.schema.HashKeyPrefix, hid))
+	hashKey = []byte(fmt.Sprintf("%s-i%d-%d", v.schema.HashKeyPrefix, v.id, hid))
 
 	for sid := 0; sid < v.schema.SortKeyBatch; sid++ {
 		var sidWithLeadingZero bytes.Buffer
@@ -127,7 +135,7 @@ func (v *Verifier) generateKeyRange(hid int64) (hashKey []byte, sortKeys [][]byt
 
 // TODO(wutao1): write using multiple goroutines
 // Not thread-safe.
-func (v *Verifier) WriteBatchOrDie(hid int64) {
+func (v *Verifier) WriteBatch(hid int64) {
 	value := &bytes.Buffer{}
 	for vid := 0; vid < v.schema.ValueSize; vid++ {
 		value.WriteByte('0')
@@ -146,7 +154,7 @@ func (v *Verifier) WriteBatchOrDie(hid int64) {
 }
 
 // Not thread-safe.
-func (v *Verifier) ReadBatchOrDie(hid int64) {
+func (v *Verifier) ReadBatch(hid int64) {
 	hashKey, sortKeys := v.generateKeyRange(hid)
 	for _, sortKey := range sortKeys {
 		v.getOrDie(hashKey, sortKey)
@@ -166,7 +174,7 @@ func (v *Verifier) FullScan(hid int64) {
 
 	for i := int64(0); i < hid; i++ {
 		// TODO(wutao1): use scan instead.
-		v.ReadBatchOrDie(hid)
+		v.ReadBatch(hid)
 
 		select {
 		case <-v.rootCtx.Done():
@@ -178,9 +186,8 @@ func (v *Verifier) FullScan(hid int64) {
 	log.Infof("%s: full scan complete [hid: %d]", v, hid)
 }
 
-// use the first meta server as the name
 func (v *Verifier) String() string {
-	return "v-" + v.clientCfg.MetaServers[0]
+	return v.name
 }
 
 func WaitTil(ctx context.Context, duration time.Duration) bool {

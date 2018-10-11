@@ -2,6 +2,7 @@ package scheck
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"sync/atomic"
 	"time"
@@ -20,7 +21,8 @@ func Run(rootCtx context.Context, withKillTest bool) {
 	cfg := &Config{}
 	tools.LoadAndUnmarshalConfig("config-scheck.json", cfg)
 
-	v := tools.NewVerifier(cfg.ClientCfg, &cfg.SchemaCfg, rootCtx)
+	client := pegasus.NewClient(cfg.ClientCfg)
+	v := tools.NewVerifier(0, fmt.Sprintf("v-%s", cfg.ClientCfg.MetaServers[0]), client, &cfg.SchemaCfg, rootCtx)
 
 	hid := int64(0)
 	verifiedHid := int64(0)
@@ -42,8 +44,8 @@ func Run(rootCtx context.Context, withKillTest bool) {
 	}()
 
 	for {
-		v.WriteBatchOrDie(hid)
-		v.ReadBatchOrDie(hid)
+		v.WriteBatch(hid)
+		v.ReadBatch(hid)
 
 		// mark verified point
 		atomic.StoreInt64(&verifiedHid, hid)
