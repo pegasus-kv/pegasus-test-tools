@@ -58,10 +58,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	beLogFile := logging.NewLogBackend(lf, "", 0)
 	beStderr := logging.NewLogBackend(os.Stderr, "", 0)
+	// Only warnings and more severe messages should be sent to beLogFile
+	beLogFileLevel := logging.AddModuleLevel(beLogFile)
+	beLogFileLevel.SetLevel(logging.WARNING, "")
+
 	logging.SetBackend(beLogFile, beStderr)
 	logging.SetFormatter(logging.MustStringFormatter("%{color}%{time:15:04:05.000} ▶ %{color:reset} %{message}"))
+
 	pegalog.SetLogger(&pegasusLogger{
 		plog: logging.MustGetLogger("pegasus"),
 	})

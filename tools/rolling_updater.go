@@ -50,6 +50,10 @@ func (r *RollingUpdater) round(roundId int) {
 
 	output, err := cmd.Output()
 	log.Critical(string(output))
+	if strings.Contains(string(output), "extract replica count from perf counters failed") {
+		// ignore error from collector
+		return
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
