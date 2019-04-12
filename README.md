@@ -3,13 +3,27 @@
 
 This project includes a set of tools that are useful for availability tests of pegasus.
 
+## Installation
+
+First ensure you have golang (>= 1.12) installed on your computer.
+
+```
+git clone https://github.com/pegasus-kv/pegasus-test-tools.git
+cd pegasus-test-tools
+make
+```
+
+Then the binary along with configurations will be placed under directory `/bin`.
+
 ## SCheck
 
 Single cluster correctness checker.
 
 **Usage:**
 
-First ensure onebox (5-replica is recommended) is running on your computer.
+First ensure onebox (5-replica is recommended) is running on your computer,
+because currently we only support kill/start process through 
+`./run.sh start/stop_onebox_instance`
 
 ```
 make

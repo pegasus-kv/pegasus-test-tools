@@ -6,4 +6,4 @@ build:
 	cp config-scheck.json bin/
 
 format:
-	gofmt -w cmd/ tools
+	gofmt -w cmd/ tools/

@@ -1,4 +1,4 @@
-package tools
+package inject
 
 import (
 	"context"
@@ -7,7 +7,12 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/op/go-logging"
+	"github.com/pegasus-kv/pegasus-test-tools/tools"
 )
+
+var log = logging.MustGetLogger("inject")
 
 type RollingUpdaterConfig struct {
 	ScriptDir string `json:"script_dir"`
@@ -15,10 +20,10 @@ type RollingUpdaterConfig struct {
 
 type RollingUpdater struct {
 	cfg       RollingUpdaterConfig
-	clientCfg ClientConfig
+	clientCfg tools.ClientConfig
 }
 
-func NewRollingUpdater(config RollingUpdaterConfig, clientConfig ClientConfig) *RollingUpdater {
+func NewRollingUpdater(config RollingUpdaterConfig, clientConfig tools.ClientConfig) *RollingUpdater {
 	return &RollingUpdater{cfg: config, clientCfg: clientConfig}
 }
 

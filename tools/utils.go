@@ -21,7 +21,10 @@ func LoadAndUnmarshalConfig(filePath string, cfg interface{}) {
 		return
 	}
 
-	json.Unmarshal(rawCfg, cfg)
+	err = json.Unmarshal(rawCfg, cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Periodically reports the current progress of `action`.

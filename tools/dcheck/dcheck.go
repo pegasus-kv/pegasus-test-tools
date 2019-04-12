@@ -11,15 +11,16 @@ import (
 	"github.com/XiaoMi/pegasus-go-client/pegasus"
 	"github.com/op/go-logging"
 	"github.com/pegasus-kv/pegasus-test-tools/tools"
+	"github.com/pegasus-kv/pegasus-test-tools/tools/inject"
 )
 
 type Config struct {
-	LocalCfg         tools.ClientConfig         `json:"local_client"`
-	RemoteCfg        tools.ClientConfig         `json:"remote_client"`
-	SchemaCfg        tools.SchemaConfig         `json:"schema"`
-	KillCfg          tools.KillTestConfig       `json:"kill"`
-	RollingUpdateCfg tools.RollingUpdaterConfig `json:"rolling_update"`
-	Workers          int                        `json:"workers"`
+	LocalCfg         tools.ClientConfig          `json:"local_client"`
+	RemoteCfg        tools.ClientConfig          `json:"remote_client"`
+	SchemaCfg        tools.SchemaConfig          `json:"schema"`
+	KillCfg          inject.KillTestConfig       `json:"kill"`
+	RollingUpdateCfg inject.RollingUpdaterConfig `json:"rolling_update"`
+	Workers          int                         `json:"workers"`
 }
 
 var log = logging.MustGetLogger("dcheck")
@@ -38,11 +39,11 @@ func Run(rootCtx context.Context, withKillTest bool, withRollingUpdate bool) {
 	remoteClient := pegasus.NewClient(remoteCfg)
 
 	if withRollingUpdate {
-		ru := tools.NewRollingUpdater(cfg.RollingUpdateCfg, cfg.LocalCfg)
+		ru := inject.NewRollingUpdater(cfg.RollingUpdateCfg, cfg.LocalCfg)
 		go ru.Run(rootCtx)
 	}
 	if withKillTest {
-		kt := tools.NewServerKillTest(&cfg.KillCfg)
+		kt := inject.NewServerKillTest(&cfg.KillCfg)
 		go kt.Run(rootCtx)
 	}
 

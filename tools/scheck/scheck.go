@@ -9,12 +9,13 @@ import (
 
 	"github.com/XiaoMi/pegasus-go-client/pegasus"
 	"github.com/pegasus-kv/pegasus-test-tools/tools"
+	"github.com/pegasus-kv/pegasus-test-tools/tools/inject"
 )
 
 type Config struct {
-	ClientCfg pegasus.Config       `json:"client"`
-	SchemaCfg tools.SchemaConfig   `json:"schema"`
-	KillCfg   tools.KillTestConfig `json:"kill"`
+	ClientCfg pegasus.Config        `json:"client"`
+	SchemaCfg tools.SchemaConfig    `json:"schema"`
+	KillCfg   inject.KillTestConfig `json:"kill"`
 }
 
 func Run(rootCtx context.Context, withKillTest bool) {
@@ -28,7 +29,7 @@ func Run(rootCtx context.Context, withKillTest bool) {
 	verifiedHid := int64(0)
 
 	if withKillTest {
-		kt := tools.NewServerKillTest(&cfg.KillCfg)
+		kt := inject.NewServerKillTest(&cfg.KillCfg)
 		go kt.Run(rootCtx)
 	}
 
