@@ -64,7 +64,7 @@ func (s *ServerKillTest) Round(roundId int) {
 	}
 
 	// sleep for a random time before restart
-	sleepTime = rand.Intn(60) + 1
+	sleepTime = rand.Intn(20) + 1
 	log.Infof("sleep %ds before restart", sleepTime)
 	time.Sleep(time.Second * time.Duration(sleepTime))
 
@@ -118,6 +118,7 @@ func (o *minosController) control(itype string, idx int, op string) error {
 	case iTypeReplica:
 		itype = "replica"
 	}
+	idx--
 
 	cmdStr := fmt.Sprintf("deploy %s pegasus %s --job %s --task %d --skip_confirm",
 		op, o.clusterName, itype, idx)

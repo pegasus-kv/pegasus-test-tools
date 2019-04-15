@@ -67,7 +67,7 @@ func main() {
 
 	logging.SetBackend(beLogFile, beStderr)
 	logging.SetFormatter(
-		logging.MustStringFormatter("%{color}%{time:15:04:05.000} %{longfunc} > %{color:reset} %{message}"),
+		logging.MustStringFormatter("%{time:15:04:05.000} %{module} %{longfunc} > %{message}"),
 	)
 
 	pegalog.SetLogger(&pegasusLogger{
