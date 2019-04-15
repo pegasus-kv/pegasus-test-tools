@@ -13,25 +13,24 @@ import (
 )
 
 type Config struct {
-	ClientCfg pegasus.Config        `json:"client"`
-	SchemaCfg tools.SchemaConfig    `json:"schema"`
-	KillCfg   inject.KillTestConfig `json:"kill"`
+	ClientCfg tools.ClientConfig `json:"client"`
+	SchemaCfg tools.SchemaConfig `json:"schema"`
+	InjectCfg inject.Config      `json:"inject"`
 }
 
-func Run(rootCtx context.Context, withKillTest bool) {
+func Run(rootCtx context.Context) {
 	cfg := &Config{}
 	tools.LoadAndUnmarshalConfig("config-scheck.json", cfg)
 
-	client := pegasus.NewClient(cfg.ClientCfg)
+	client := pegasus.NewClient(pegasus.Config{cfg.ClientCfg.MetaServers})
 	v := tools.NewVerifier(0, fmt.Sprintf("v-%s", cfg.ClientCfg.MetaServers[0]), client, &cfg.SchemaCfg, rootCtx)
 
 	hid := int64(0)
 	verifiedHid := int64(0)
 
-	if withKillTest {
-		kt := inject.NewServerKillTest(&cfg.KillCfg)
-		go kt.Run(rootCtx)
-	}
+	cfg.InjectCfg.MetaServers = cfg.ClientCfg.MetaServers
+	cfg.InjectCfg.ClusterName = cfg.ClientCfg.ClusterName
+	go inject.Run(rootCtx, &cfg.InjectCfg)
 
 	go tools.ProgressReport(rootCtx, "verify", time.Second*10, &hid, cfg.SchemaCfg.SortKeyBatch)
 

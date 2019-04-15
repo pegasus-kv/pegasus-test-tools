@@ -1,55 +1,30 @@
 package inject
 
 import (
-	"context"
 	"fmt"
 	"math"
 	"os/exec"
 	"strings"
 	"time"
-
-	"github.com/op/go-logging"
-	"github.com/pegasus-kv/pegasus-test-tools/tools"
 )
 
-var log = logging.MustGetLogger("inject")
-
-type RollingUpdaterConfig struct {
-	ScriptDir string `json:"script_dir"`
-}
-
 type RollingUpdater struct {
-	cfg       RollingUpdaterConfig
-	clientCfg tools.ClientConfig
+	cfg *Config
 }
 
-func NewRollingUpdater(config RollingUpdaterConfig, clientConfig tools.ClientConfig) *RollingUpdater {
-	return &RollingUpdater{cfg: config, clientCfg: clientConfig}
+func NewRollingUpdater(config *Config) *RollingUpdater {
+	return &RollingUpdater{cfg: config}
 }
 
-func (r *RollingUpdater) Run(ctx context.Context) {
-	roundId := 0
-	for {
-		roundId++
-		r.round(roundId)
-
-		select {
-		case <-ctx.Done():
-			log.Info("stopping rolling updater")
-			return
-		default:
-		}
-	}
-}
-
-func (r *RollingUpdater) round(roundId int) {
+func (r *RollingUpdater) Round(roundId int) {
 	// sleep for a random time before rolling update
 	sleepTime := int(math.Min(float64(60+20*roundId), 1000))
-	log.Infof("sleep %ds before kill", sleepTime)
+	log.Infof("sleep %ds before rolling update", sleepTime)
 	time.Sleep(time.Second * time.Duration(sleepTime))
 
-	metaServers := strings.Join(r.clientCfg.MetaServers, ",")
-	cmdStr := fmt.Sprintf("cd %s; ./pegasus_rolling_update.sh %s %s all 0", r.cfg.ScriptDir, r.clientCfg.ClusterName, metaServers)
+	metaServers := strings.Join(r.cfg.MetaServers, ",")
+	cmdStr := fmt.Sprintf("cd %s/scripts; ./pegasus_rolling_update.sh %s %s all 0",
+		r.cfg.ScriptDir, r.cfg.ClusterName, metaServers)
 	log.Infof("execute shell command \"%s\"", cmdStr)
 	cmd := exec.Command("bash", "-c", cmdStr)
 
@@ -59,7 +34,13 @@ func (r *RollingUpdater) round(roundId int) {
 		// ignore error from collector
 		return
 	}
-	if err != nil {
+	if strings.Count(string(output), "Rolling updating replica success") != r.cfg.TotalReplicaCnt {
 		log.Fatal(err)
+	}
+	if !strings.Contains(string(output), "Rolling updating meta success") {
+		log.Fatal(err)
+	}
+	if err != nil {
+		log.Error(err)
 	}
 }

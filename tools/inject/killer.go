@@ -1,7 +1,6 @@
 package inject
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
 	"os"
@@ -18,14 +17,6 @@ const (
 	killTypeMinos  = "minos"
 )
 
-type KillTestConfig struct {
-	RunScriptDir    string `json:"run_script_dir"`
-	TotalReplicaCnt int    `json:"total_replica_count"`
-	TotalMetaCnt    int    `json:"total_meta_count"`
-	KillType        string `json:"kill_type"`
-	ClusterName     string `json:"cluster_name"`
-}
-
 type instanceController interface {
 	killInstance(itype string, idx int) error
 	startInstance(itype string, idx int) error
@@ -33,17 +24,17 @@ type instanceController interface {
 
 // Randomly pick one replica server, kill it and restart it.
 type ServerKillTest struct {
-	cfg        *KillTestConfig
+	cfg        *Config
 	controller instanceController
 }
 
-func NewServerKillTest(cfg *KillTestConfig) *ServerKillTest {
+func NewServerKillTest(cfg *Config) *ServerKillTest {
 	s := &ServerKillTest{}
 	s.cfg = cfg
 
 	switch cfg.KillType {
 	case killTypeOnebox:
-		path, err := filepath.Abs(cfg.RunScriptDir)
+		path, err := filepath.Abs(cfg.ScriptDir)
 		if err != nil {
 			log.Fatalf("bad run script path: %s", path)
 		}
@@ -60,22 +51,7 @@ func NewServerKillTest(cfg *KillTestConfig) *ServerKillTest {
 	return s
 }
 
-func (s *ServerKillTest) Run(ctx context.Context) {
-	roundId := 0
-	for {
-		roundId++
-		s.round(roundId)
-
-		select {
-		case <-ctx.Done():
-			log.Info("stopping killer")
-			return
-		default:
-		}
-	}
-}
-
-func (s *ServerKillTest) round(roundId int) {
+func (s *ServerKillTest) Round(roundId int) {
 	// sleep for a random time before kill
 	sleepTime := rand.Intn(60) + 60
 	log.Infof("sleep %ds before kill", sleepTime)

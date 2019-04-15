@@ -2,17 +2,13 @@ package main
 
 import (
 	"github.com/pegasus-kv/pegasus-test-tools/tools/dcheck"
+	"github.com/pegasus-kv/pegasus-test-tools/tools/inject"
 	"github.com/pegasus-kv/pegasus-test-tools/tools/scheck"
 	"github.com/spf13/cobra"
 )
 
-var (
-	withKillTest      bool
-	withRollingUpdate bool
-)
-
 func runDCheckCommand(cmd *cobra.Command, args []string) {
-	dcheck.Run(globalContext, withKillTest, withRollingUpdate)
+	dcheck.Run(globalContext)
 }
 
 func newDCheckCommand() *cobra.Command {
@@ -21,13 +17,13 @@ func newDCheckCommand() *cobra.Command {
 		Short: "duplication correctness checker",
 		Run:   runDCheckCommand,
 	}
-	m.Flags().BoolVarP(&withKillTest, "kill", "k", false, "will randomly kill servers")
-	m.Flags().BoolVarP(&withRollingUpdate, "roll", "r", false, "will run rolling update")
+	m.Flags().BoolVarP(&inject.WithKillTest, "kill", "k", false, "will randomly kill servers")
+	m.Flags().BoolVarP(&inject.WithRollingUpdate, "roll", "r", false, "will run rolling update")
 	return m
 }
 
 func runSCheckCommand(cmd *cobra.Command, args []string) {
-	scheck.Run(globalContext, withKillTest)
+	scheck.Run(globalContext)
 }
 
 func newSCheckCommand() *cobra.Command {
@@ -36,6 +32,7 @@ func newSCheckCommand() *cobra.Command {
 		Short: "single cluster correctness checker",
 		Run:   runSCheckCommand,
 	}
-	m.Flags().BoolVarP(&withKillTest, "kill", "k", false, "will randomly kill servers")
+	m.Flags().BoolVarP(&inject.WithKillTest, "kill", "k", false, "will randomly kill servers")
+	m.Flags().BoolVarP(&inject.WithRollingUpdate, "roll", "r", false, "will run rolling update")
 	return m
 }

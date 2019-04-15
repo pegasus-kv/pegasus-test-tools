@@ -62,7 +62,7 @@ func (v *Verifier) setOrDie(hashKey []byte, sortKey []byte, value []byte) {
 		ctx, _ := context.WithTimeout(v.rootCtx, v.opTimeout)
 		if err = v.tb.Set(ctx, hashKey, sortKey, value); err != nil {
 			log.Infof("%s: %s [hashkey: %s, sortkey: %s, tried: %d]", v, err, hashKey, sortKey, tries)
-			time.Sleep(1 * time.Second)
+			time.Sleep(5 * time.Second)
 
 			// check if cancelled
 			select {
@@ -88,7 +88,7 @@ func (v *Verifier) getOrDie(hashKey []byte, sortKey []byte) (value []byte) {
 		ctx, _ := context.WithTimeout(v.rootCtx, v.opTimeout)
 		if value, err = v.tb.Get(ctx, hashKey, sortKey); err != nil {
 			log.Infof("%s: %s [hashkey: %s, sortkey: %s, tried: %d]", v, err, hashKey, sortKey, tries)
-			time.Sleep(1 * time.Second)
+			time.Sleep(5 * time.Second)
 
 			// check if cancelled
 			select {

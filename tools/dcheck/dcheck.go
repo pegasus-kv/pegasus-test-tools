@@ -15,17 +15,16 @@ import (
 )
 
 type Config struct {
-	LocalCfg         tools.ClientConfig          `json:"local_client"`
-	RemoteCfg        tools.ClientConfig          `json:"remote_client"`
-	SchemaCfg        tools.SchemaConfig          `json:"schema"`
-	KillCfg          inject.KillTestConfig       `json:"kill"`
-	RollingUpdateCfg inject.RollingUpdaterConfig `json:"rolling_update"`
-	Workers          int                         `json:"workers"`
+	LocalCfg  tools.ClientConfig `json:"local_client"`
+	RemoteCfg tools.ClientConfig `json:"remote_client"`
+	SchemaCfg tools.SchemaConfig `json:"schema"`
+	InjectCfg inject.Config      `json:"inject"`
+	Workers   int                `json:"workers"`
 }
 
 var log = logging.MustGetLogger("dcheck")
 
-func Run(rootCtx context.Context, withKillTest bool, withRollingUpdate bool) {
+func Run(rootCtx context.Context) {
 	cfg := &Config{}
 	tools.LoadAndUnmarshalConfig("config-dcheck.json", cfg)
 	if cfg.Workers <= 0 {
@@ -38,14 +37,9 @@ func Run(rootCtx context.Context, withKillTest bool, withRollingUpdate bool) {
 	localClient := pegasus.NewClient(localCfg)
 	remoteClient := pegasus.NewClient(remoteCfg)
 
-	if withRollingUpdate {
-		ru := inject.NewRollingUpdater(cfg.RollingUpdateCfg, cfg.LocalCfg)
-		go ru.Run(rootCtx)
-	}
-	if withKillTest {
-		kt := inject.NewServerKillTest(&cfg.KillCfg)
-		go kt.Run(rootCtx)
-	}
+	cfg.InjectCfg.MetaServers = cfg.LocalCfg.MetaServers
+	cfg.InjectCfg.ClusterName = cfg.LocalCfg.ClusterName
+	go inject.Run(rootCtx, &cfg.InjectCfg)
 
 	for i := 0; i < cfg.Workers; i++ {
 		// distribute the workers into different time ranges.

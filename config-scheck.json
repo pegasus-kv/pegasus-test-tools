@@ -1,5 +1,6 @@
 {
   "client": {
+    "cluster_name": "c4tst-dup1",
     "meta_servers": [
       "127.0.0.1:34601",
       "127.0.0.1:34602",
@@ -13,9 +14,10 @@
     "value_size": 100,
     "app_name": "temp"
   },
-  "kill": {
-    "run_script_dir": "/home/mi/git/pegasus",
-    "total_replica_count": 5,
-    "total_meta_count": 2
+  "inject": {
+    "total_replica_count": 4,
+    "total_meta_count": 2,
+    "script_dir": "/home/mi/git/pegasus",
+    "kill_type": "onebox"
   }
 }
