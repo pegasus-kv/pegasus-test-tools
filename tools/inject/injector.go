@@ -36,6 +36,9 @@ func Run(ctx context.Context, cfg *Config) {
 	if WithRollingUpdate {
 		injectors = append(injectors, kt.Round)
 	}
+	if len(injectors) == 0 {
+		return
+	}
 
 	roundId := 0
 	for {
