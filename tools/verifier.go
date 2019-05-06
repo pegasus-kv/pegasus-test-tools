@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/XiaoMi/pegasus-go-client/pegasus"
@@ -137,7 +138,9 @@ func (v *Verifier) generateKeyRange(hid int64) (hashKey []byte, sortKeys [][]byt
 // Not thread-safe.
 func (v *Verifier) WriteBatch(hid int64) {
 	value := &bytes.Buffer{}
-	for vid := 0; vid < v.schema.ValueSize; vid++ {
+	// value size ranges randomly in [ValueSize, 2*ValueSize]
+	valueSize := rand.Intn(v.schema.ValueSize) + v.schema.ValueSize
+	for vid := 0; vid < valueSize; vid++ {
 		value.WriteByte('0')
 	}
 

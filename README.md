@@ -63,3 +63,16 @@ using the following command:
  or
 ./bin/toolbox scheck --kill
 ```
+
+## DCheck
+
+Duplication correctness checker.
+
+**Usage:**
+
+First place config-dcheck.json under the same path of `toolbox`, then run
+
+```
+./bin/toolbox dcheck
+```
+

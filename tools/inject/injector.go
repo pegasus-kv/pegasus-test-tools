@@ -31,10 +31,10 @@ func Run(ctx context.Context, cfg *Config) {
 
 	var injectors []injector
 	if WithKillTest {
-		injectors = append(injectors, ru.Round)
+		injectors = append(injectors, kt.Round)
 	}
 	if WithRollingUpdate {
-		injectors = append(injectors, kt.Round)
+		injectors = append(injectors, ru.Round)
 	}
 	if len(injectors) == 0 {
 		return
